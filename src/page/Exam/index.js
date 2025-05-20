@@ -1,42 +1,66 @@
-// src/page/Exam/index.js
 import React, { useEffect, useState } from 'react';
-import { Card, Button, Modal, List, Typography, Spin, Tabs } from 'antd';
+import { Card, Button, Modal, List, Typography, Spin, Tabs, message } from 'antd';
 import { PlayCircleOutlined } from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 
 const { Title, Paragraph } = Typography;
-const LEVELS = ['n1', 'n2', 'n3', 'n4', 'n5'];
+const LEVELS = ['N1', 'N2', 'N3', 'N4', 'N5'];
 
 const ExamPage = () => {
-  const { level } = useParams();          // lấy level từ URL
-  const navigate  = useNavigate();
-  const [exams, setExams]   = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const level = searchParams.get('level');
+  const navigate = useNavigate();
+  const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState(null);
 
   /* Gọi API mỗi khi level đổi */
   useEffect(() => {
-    setLoading(true);
-    // TODO: fetch(`/api/exams?level=${level}`)
-    setTimeout(() => {
-      // Giả lập dữ liệu theo level
-      setExams([
-        { id: 1, title: `Đề ${level.toUpperCase()} – 07/2024`, questions: 75 },
-        { id: 2, title: `Đề ${level.toUpperCase()} – 12/2023`, questions: 70 },
-      ]);
+  const fetchExams = async () => {
+    try {
+      setLoading(true);
+
+      const response = await axios.get('http://localhost:8080/api/exam', {
+        params: { level }
+      });
+
+      const data = response.data;
+      console.log(data);
+
+      if (!data || data.length === 0) {
+        message.warning(`Không tìm thấy đề thi nào cho trình độ ${level}`);
+        setExams([]);
+      } else {
+        setExams(data.map(exam => ({
+          id: exam.id,
+          title: `Đề ${exam.level} - ${exam.month}/${exam.year}`,
+          questions: 75, 
+          examData: exam
+        })));
+      }
+
+    } catch (error) {
+      console.error('Lỗi khi tải danh sách đề thi:', error);
+      message.error('Đã xảy ra lỗi khi tải đề thi');
+    } finally {
       setLoading(false);
-    }, 600);
+    }
+  };
+
+    fetchExams();
   }, [level]);
 
   /* Đổi tab = đổi URL => level mới */
   const handleTabChange = (key) => {
-    navigate(`/exam/${key}`);
+    navigate(`/exam?level=${key}`);
   };
-
-  const handleReady = () => {
+  /*chuyển trang test */
+  const handleReady = async() => {
     setModalOpen(false);
-    navigate(`/test/${selectedExam.id}`);
+    
+    navigate(`/test/${selectedExam.id}`); 
   };
 
   return (
@@ -63,6 +87,7 @@ const ExamPage = () => {
           renderItem={(exam) => (
             <List.Item>
               <Card
+                id={exam.id}
                 title={exam.title}
                 extra={`${exam.questions} câu`}
                 actions={[

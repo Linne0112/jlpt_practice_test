@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './style.css'; // Đảm bảo file này có tồn tại!
+import './style.css'; 
 import { Button, Card, Typography } from 'antd';
+import axios from 'axios';
 
 const { Title, Paragraph } = Typography;
 
@@ -15,10 +16,29 @@ const Home = () => {
     setSelectedLevel(level);
   };
 
-  const handleStartPractice = () => {
-    navigate(`/exam/${selectedLevel.toLowerCase()}`);
-  };
+  const handleStartPractice = async () => {
+  try {
+    const response = await axios.get(`http://localhost:8080/api/exam`, {
+      params: {
+        level: selectedLevel
+      }
+    });
 
+    const exams = response.data;
+
+    if (!exams || exams.length === 0) {
+      alert(`Không tìm thấy đề thi nào cho trình độ ${selectedLevel}`);
+      return;
+    }
+
+    // Chuyển hướng với query parameter
+    navigate(`/exam?level=${selectedLevel}`);
+
+  } catch (error) {
+    console.error('Lỗi khi kiểm tra đề thi:', error);
+    alert('Đã xảy ra lỗi khi kiểm tra đề thi');
+  }
+};
   return (
     <div className="home-container">
       <Title className="app-title">JLPT Practice Test</Title>

@@ -31,7 +31,7 @@ function App() {
           >
             {/* Route con (hiển thị qua <Outlet/>) */}
             <Route index element={<HomePage />} />
-            <Route path="exam/:level" element={<ExamPage />} />
+            <Route path="exam" element={<ExamPage />} />
             <Route path="test/:id"   element={<TestPage />} />
             <Route path="account"    element={<AccountPage />} /> {/* ← thêm dòng này */}
           </Route>

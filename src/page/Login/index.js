@@ -45,11 +45,11 @@ const LoginPage = () => {
           layout="vertical" // Để các trường form xếp dọc
         >
           <Form.Item
-            label="Tên đăng nhập"
+            label="Email"
             name="username"
             rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
           >
-            <Input placeholder="Username" />
+            <Input placeholder="Email" />
           </Form.Item>
 
           <Form.Item

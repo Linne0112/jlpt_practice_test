@@ -1,12 +1,11 @@
-// src/components/LayoutDefault/index.js
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import './style.css';
+import { useNavigate, Outlet } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext'; // Cập nhật theo cấu trúc thư mục thật của bạn
+
 
 const LayoutDefault = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   return (
     <div className="layout-default">
@@ -24,16 +23,24 @@ const LayoutDefault = () => {
             👤 Account
           </button>
 
-          {/* 👇 Nếu là admin thì hiển thị thêm nút quản trị */}
-          {user?.name === 'admin' && (
+          {user?.role === 'admin' && (
             <button className="admin-button" onClick={() => navigate('/admin')}>
               🛠️ Quản trị
+            </button>
+          )}
+
+          {/* 👇 Thêm nút Đăng xuất */}
+          {user && (
+            <button className="logout-button" onClick={() => {
+              logout();
+              navigate('/');
+            }}>
+              🚪 Đăng xuất
             </button>
           )}
         </div>
       </header>
 
-      {/* <Outlet /> để hiển thị route con */}
       <main className="main-content">
         <Outlet />
       </main>

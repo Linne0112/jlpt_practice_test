@@ -1,60 +1,95 @@
-// src/page/Admin/ExamDetail.js
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Typography, Button, List, Card, Spin, message } from 'antd';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Typography, Button, List, Card, message, Tabs } from 'antd';
+import axios from 'axios';
 
 const { Title } = Typography;
 
-const ExamDetail = () => {
+const AdminExamDetail = () => {
   const { level, examId } = useParams();
   const navigate = useNavigate();
 
   const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('vocabulary');
+
+  const accessToken = localStorage.getItem('accessToken');
+  
+
+  const fetchQuestions = async (section) => {
+    if (!examId) {
+      message.error('examId không hợp lệ');
+      return;
+    }
+    try {
+      const url = `http://localhost:8080/api/questions/?examId=${examId}&section=${section}`;
+      const response = await axios.get(url, {headers: {
+            Authorization: `Bearer ${accessToken}`
+          }});
+      setQuestions(response.data);
+    } catch (error) {
+      console.error('Fetch error:', error);
+      message.error('Lỗi khi tải câu hỏi');
+      setQuestions([]);
+    }
+  };
 
   useEffect(() => {
-    fetch(`/api/exams/${examId}/questions`)
-      .then((res) => {
-        if (!res.ok) throw new Error('Failed to fetch');
-        return res.json();
-      })
-      .then((data) => setQuestions(data))
-      .catch(() => message.error('Lỗi khi tải câu hỏi'))
-      .finally(() => setLoading(false));
-  }, [examId]);
+    fetchQuestions(activeTab);
+  }, [activeTab, examId]);
+
+  const handleTabChange = (key) => {
+    setActiveTab(key);
+  };
 
   return (
     <div style={{ padding: 24 }}>
-      <Title level={3}>Danh sách câu hỏi – Đề {examId}</Title>
+      <Title level={3}>Danh sách câu hỏi </Title>
+
+      <Tabs
+        activeKey={activeTab}
+        onChange={handleTabChange}
+        items={[
+          { key: 'vocabulary', label: 'Từ vựng' },
+          { key: 'reading', label: 'Đọc hiểu' },
+          { key: 'listening', label: 'Nghe hiểu' },
+        ]}
+        style={{ marginBottom: 24 }}
+      />
 
       <Button
         type="primary"
         style={{ marginBottom: 24 }}
-        onClick={() => navigate(`/admin/exam/${level}/${examId}/add-question`)}
+        onClick={() => navigate(`/admin/exam/${level}/${examId}/new_question`)}
       >
         ➕ Thêm câu hỏi
       </Button>
 
-      {loading ? (
-        <Spin />
-      ) : questions.length === 0 ? (
+      {questions.length === 0 ? (
         <p>Chưa có câu hỏi nào.</p>
       ) : (
         <List
           grid={{ gutter: 16, column: 2 }}
           dataSource={questions}
-          renderItem={(q) => (
-            <List.Item>
-              <Card title={`Câu hỏi ${q.id}`}>
-                <p><strong>{q.text}</strong></p>
+          renderItem={(q, index) => (
+            <List.Item key={index}>
+              <Card title={`Câu hỏi ${index + 1}`}>
+                <p><strong>{q.question}</strong></p>
                 <ul>
-                  {q.choices.map((c, idx) => (
+                  {q.options.map((option, idx) => (
                     <li key={idx}>
-                      {String.fromCharCode(65 + idx)}. {c}
+                      {String.fromCharCode(65 + idx)}. {option}
                     </li>
                   ))}
                 </ul>
-                <p>✅ Đáp án đúng: <strong>{q.correct}</strong></p>
+                <p>
+                  ⭕️ Đáp án đúng:{' '}
+                  <strong>{String.fromCharCode(65 + q.correctAnswerIndex)}</strong>
+                </p>
+                {q.audioUrl && (
+                  <audio controls src={q.audioUrl} style={{ marginTop: 10 }}>
+                    Trình duyệt không hỗ trợ thẻ audio.
+                  </audio>
+                )}
               </Card>
             </List.Item>
           )}
@@ -64,4 +99,4 @@ const ExamDetail = () => {
   );
 };
 
-export default ExamDetail;
+export default AdminExamDetail;

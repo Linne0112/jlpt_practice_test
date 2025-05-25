@@ -15,19 +15,21 @@ const ExamPage = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState(null);
+  const accessToken = localStorage.getItem('accessToken');
 
   /* Gọi API mỗi khi level đổi */
   useEffect(() => {
   const fetchExams = async () => {
     try {
       setLoading(true);
-
       const response = await axios.get('http://localhost:8080/api/exam', {
-        params: { level }
+        params: { level },
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
       });
 
       const data = response.data;
-      console.log(data);
 
       if (!data || data.length === 0) {
         message.warning(`Không tìm thấy đề thi nào cho trình độ ${level}`);
@@ -44,6 +46,7 @@ const ExamPage = () => {
     } catch (error) {
       console.error('Lỗi khi tải danh sách đề thi:', error);
       message.error('Đã xảy ra lỗi khi tải đề thi');
+      
     } finally {
       setLoading(false);
     }

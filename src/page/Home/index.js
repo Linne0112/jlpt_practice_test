@@ -11,6 +11,8 @@ const Home = () => {
   const navigate = useNavigate();
   
   const levels = ['N1', 'N2', 'N3', 'N4', 'N5'];
+  const accessToken = localStorage.getItem('accessToken');
+
 
   const handleLevelClick = (level) => {
     setSelectedLevel(level);
@@ -21,6 +23,9 @@ const Home = () => {
     const response = await axios.get(`http://localhost:8080/api/exam`, {
       params: {
         level: selectedLevel
+      },
+      headers: {
+          Authorization: `Bearer ${accessToken}`
       }
     });
 

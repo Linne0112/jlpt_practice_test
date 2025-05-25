@@ -1,31 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Card, List, Modal, Typography, Spin, Tabs } from 'antd';
+import { Button, Card, List, Modal, Typography, Spin, Tabs, message } from 'antd';
 import ExamForm from './ExamForm';
+import axios from 'axios';
 
 const { Title } = Typography;
 
 const AdminExamList = () => {
-  const { level } = useParams(); // level từ URL
+  const { level } = useParams();
   const navigate = useNavigate();
 
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
-
-  // Giả lập gọi API mỗi khi level đổi
+  const accessToken = localStorage.getItem('accessToken');
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setExams([
-        { id: 1, title: `Đề ${level.toUpperCase()} – 07/2024` },
-        { id: 2, title: `Đề ${level.toUpperCase()} – 12/2023` },
-      ]);
-      setLoading(false);
-    }, 500);
+    const fetchExams = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.get(`http://localhost:8080/api/questions/level/${level.toUpperCase()}`, 
+        {headers: {
+            Authorization: `Bearer ${accessToken}`
+          }}
+        );
+        const formattedExams = response.data.map((item) => ({
+          id: item.id,
+          title: `Đề ${item.level} – ${String(item.month).padStart(2, '0')}/${item.year}`,
+        }));
+        setExams(formattedExams);
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu đề thi:', error);
+        message.error('Không thể tải danh sách đề thi.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExams();
   }, [level]);
 
-  // Thêm đề mới
   const handleAddExam = (newExam) => {
     setExams(prev => [newExam, ...prev]);
     setModalOpen(false);
@@ -33,12 +46,10 @@ const AdminExamList = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      {/* Tiêu đề */}
       <Title level={3} style={{ textAlign: 'center', marginBottom: 16 }}>
         Luyện thi năng lực tiếng Nhật
       </Title>
 
-      {/* Tabs cấp độ */}
       <Tabs
         activeKey={level.toLowerCase()}
         onChange={(key) => navigate(`/admin/exam/${key}`)}
@@ -50,7 +61,6 @@ const AdminExamList = () => {
         }))}
       />
 
-      {/* Nút thêm đề */}
       <Button
         type="primary"
         onClick={() => setModalOpen(true)}
@@ -59,7 +69,6 @@ const AdminExamList = () => {
         ➕ Thêm đề thi
       </Button>
 
-      {/* Danh sách đề */}
       {loading ? (
         <Spin />
       ) : (
@@ -71,7 +80,7 @@ const AdminExamList = () => {
               <Card
                 title={exam.title}
                 actions={[
-                  <Button onClick={() => navigate(`/admin/exam/${level}/${exam.id}`)}>
+                  <Button onClick={() => navigate(`/admin/exam/${level}/${exam.id}` )}>
                     Xem / Thêm câu hỏi
                   </Button>,
                 ]}
@@ -81,7 +90,6 @@ const AdminExamList = () => {
         />
       )}
 
-      {/* Modal thêm đề */}
       <Modal
         open={modalOpen}
         title="Thêm đề thi mới"

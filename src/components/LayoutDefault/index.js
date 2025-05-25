@@ -10,12 +10,12 @@ const LayoutDefault = () => {
   return (
     <div className="layout-default">
       <header className="header">
-        <h1 className="logo" onClick={() => navigate(user?.name === 'admin' ? '/admin' : '/')}>
+        <h1 className="logo" onClick={() => navigate(user.role === 'admin' ? '/admin' : '/')}>
           JLPT Practice
         </h1>
 
         <div className="header-actions">
-          <button className="home-button" onClick={() => navigate(user?.name === 'admin' ? '/admin' : '/')}>
+          <button className="home-button" onClick={() => navigate(user.role === 'admin' ? '/admin' : '/')}>
             🏠 Trang chủ
           </button>
 
@@ -23,7 +23,7 @@ const LayoutDefault = () => {
             👤 Account
           </button>
 
-          {user?.role === 'admin' && (
+          {user.role === 'admin' && (
             <button className="admin-button" onClick={() => navigate('/admin')}>
               🛠️ Quản trị
             </button>

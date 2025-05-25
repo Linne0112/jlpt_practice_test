@@ -39,7 +39,7 @@ const AllRoute = () => {
           <Route index element={<Exam />} />
           <Route path=":level" element={<Exam />} />
         </Route>
-        <Route path="test/:examId" element={<Test />} />
+        <Route path="test/:id" element={<Test />} />
         <Route path="account" element={<Account />} />
       </Route>
 
@@ -55,7 +55,7 @@ const AllRoute = () => {
         <Route index element={<AdminHome />} />
         <Route path="exam/:level" element={<AdminExamList />} />
         <Route path="exam/:level/:examId" element={<AdminExamDetail />} />
-        <Route path="exam/:level/:examId/add-question" element={<QuestionForm />} />
+        <Route path="exam/:level/:examId/new_question" element={<QuestionForm />} />
       </Route>
     </Routes>
   );

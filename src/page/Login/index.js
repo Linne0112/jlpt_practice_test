@@ -5,28 +5,29 @@ import { useAuth } from '../../contexts/AuthContext'; // Đảm bảo đúng đ�
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
-  const { login } = useAuth(); // Chỉ cần hàm login ở đây, không cần user vì sẽ lấy từ giá trị trả về
+  const {login } = useAuth(); // Chỉ cần hàm login ở đây, không cần user vì sẽ lấy từ giá trị trả về
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const onFinish = async values => {
-  setLoading(true);
-  const success = await login(values.username, values.password);
-  setLoading(false);
+      setLoading(true);
+      
+      const loggedInUser = await login(values.username, values.password); // ✅ Trả về user object nếu thành công
+      setLoading(false);
 
-  if (success) {
-    message.success('Đăng nhập thành công!');
-    
-    // ✅ Điều hướng dựa trên tên đăng nhập
-    if (values.username === 'admin') {
-      navigate('/admin', { replace: true });
-    } else {
-      navigate('/', { replace: true });
-    }
-  } else {
-    message.error('Sai tài khoản hoặc mật khẩu.');
-  }
-};
+      if (loggedInUser) {
+        message.success('Đăng nhập thành công!');
+
+        // ✅ Dùng loggedInUser để điều hướng
+        if (loggedInUser.role === 'admin') {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/', { replace: true });
+        }
+      } else {
+        message.error('Sai tài khoản hoặc mật khẩu.');
+      }
+    };
 
 
   return (

@@ -59,10 +59,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem("accessToken", loginResponse.accessToken);
       localStorage.setItem("refreshToken", loginResponse.refreshToken);
 
-      return true;
+      return loginResponse.user;
     } catch (error) {
       console.error("Login error:", error);
-      return false;
+      return null;
     }
   };
 

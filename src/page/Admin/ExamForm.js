@@ -1,24 +1,48 @@
 import React from 'react';
-import { Form, Input, Select, Button } from 'antd';
+import { Form, Input, Select, Button, message } from 'antd';
+import axios from 'axios';
 
 const { Option } = Select;
 
 const ExamForm = ({ level, onCreate, onCancel }) => {
   const [form] = Form.useForm();
+  const accessToken = localStorage.getItem('accessToken');
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     const { month, year } = values;
 
-    const newExam = {
-      id: Date.now(),
-      level,
+    const payload = {
+      level: level.toUpperCase(),
       month,
       year,
-      title: `Đề ${level.toUpperCase()} – ${month}/${year}` // ✅ Tạo cứng tên đề
     };
 
-    onCreate(newExam);
-    form.resetFields();
+    try {
+      const response = await axios.post('http://localhost:8080/api/questions/new', payload,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+          withCredentials:true
+        }
+      );
+
+      // Gọi lại onCreate với dữ liệu đã được định dạng
+      const newExam = {
+        id: response.data.id, // Lấy id thực từ backend
+        level: response.data.level,
+        month: response.data.month,
+        year: response.data.year,
+        title: `Đề ${response.data.level} – ${String(response.data.month).padStart(2, '0')}/${response.data.year}`,
+      };
+
+      onCreate(newExam);
+      form.resetFields();
+      message.success('Tạo đề thi thành công!');
+    } catch (error) {
+      console.error('Lỗi tạo đề:', error);
+      message.error('Không thể tạo đề thi. Vui lòng thử lại.');
+    }
   };
 
   return (

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, Typography, Radio, Space, Button, Spin, Modal } from 'antd';
 import axios from 'axios';
+import { useAuth } from '../../contexts/AuthContext';
 
 const { Title, Paragraph } = Typography;
 
@@ -16,22 +17,27 @@ const TestPage = () => {
   const [endModal, setEndModal] = useState(false);
 
   const [sessionId, setSessionId] = useState('');
-  const userId = '9383x';
+  const {user} =useAuth();
+  const userId = user ? user.uid : null;
+  const accessToken = localStorage.getItem('accessToken');
 
+  
   /* Lấy đề thi */
   useEffect(() => {
     const fetchExam = async () => {
       try {
         const response = await axios.get(`http://localhost:8080/api/exam/start`, {
           params: {
-            userId: '9383x',
+            userId: userId,
             examId: id
+          },
+          headers: {
+            Authorization: `Bearer ${accessToken}`
           }
         });
         
         setExam(response.data.questionSets);
         setSessionId(response.data.sessionId);
-        console.log(response.data)
       } catch (error) {
         console.error('Lỗi khi lấy đề thi:', error);
       } finally {
@@ -42,15 +48,12 @@ const TestPage = () => {
     fetchExam();
   }, [id]);
 
-  console.log(exam);
-  console.log(sessionId)
 
   
 
   const handleChoose = async (section, questionIndex, selectedOptionIndex) => {
     const key = `${section}-${questionIndex}`;
     setAnswers(prev => ({ ...prev, [key]: selectedOptionIndex }));
-    console.log(sessionId + id + userId + section+  questionIndex + selectedOptionIndex );
 
 
     try {
@@ -61,12 +64,17 @@ const TestPage = () => {
         section,
         questionIndex,
         selectedOptionIndex
-      }, {withCredentials:true});
+      }, 
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        },
+        withCredentials:true
+      });
     } catch (error) {
       console.error('Lỗi khi gửi đáp án:', error);
     }
   };
-  console.log(answers)
   /* Render câu hỏi */
   const renderQuestions = (section, questionItems) =>
     questionItems.map((q) => (
@@ -98,14 +106,17 @@ const TestPage = () => {
   const handleFinish = async() => {
     setEndModal(false);
     try {
-      await axios.post(`http://localhost:8080/api/exam/submit?sessionId=${sessionId}`, null, {
-        withCredentials: true
+      await axios.post(`http://localhost:8080/api/exam/submit?sessionId=${sessionId}`, null, 
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+          withCredentials: true
       });
       
     } catch (error) {
       console.error('Lỗi khi submit', error);
     }
-    console.log('Đáp án gửi backend:', answers);
     navigate('/account');  // hoặc trang kết quả
   };
 

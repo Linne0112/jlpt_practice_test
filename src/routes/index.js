@@ -36,7 +36,7 @@ const AppRoutes = () => (
           }
         />
         <Route
-          path="/test"
+          path="/test/:id"
           element={
             <ProtectedRoute>
               <TestPage />

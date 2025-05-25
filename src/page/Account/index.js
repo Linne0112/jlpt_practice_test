@@ -1,29 +1,55 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Typography, Spin, Progress, Tag } from 'antd';
+import { collection, getDocs, query, where, getFirestore } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
+import { firebaseApp } from '../firebase'; // chỉnh đúng đường dẫn
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
 const AccountPage = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [results, setResults] = useState([]);
 
   useEffect(() => {
-    // demo data
-    setResults([
-      {
-        examId: 1,
-        level: 'N2',
-        date: '2025-05-18',
-        totalScore: 116,
-        parts: {
-          vocab:     { score: 38, max: 60 },
-          listening: { score: 38, max: 60 },
-          reading:   { score: 40, max: 60 },
-        },
-      },
-    ]);
-    setLoading(false);
-  }, []);
+    const fetchResults = async () => {
+      if (!user) return;
+
+      setLoading(true);
+      try {
+        const db = getFirestore(firebaseApp);
+        const q = query(
+          collection(db, 'sessions'),
+          where('userId', '==', user.uid)
+        );
+        const snapshot = await getDocs(q);
+
+        const data = snapshot.docs.map(doc => {
+          const d = doc.data();
+          return {
+            examId: d.examId,
+            date: dayjs(Number(d.timestamp)).format('YYYY-MM-DD'),
+            level: 'N5', // bạn có thể thêm trường `level` vào session nếu có
+            totalScore: d.totalScore,
+            parts: {
+              vocab:     { score: d.vocabScore ?? 0, max: 60 },
+              listening: { score: d.listeningScore ?? 0, max: 60 },
+              reading:   { score: d.readingScore ?? 0, max: 60 },
+            },
+          };
+        });
+
+        setResults(data);
+      } catch (err) {
+        console.error("Error fetching sessions:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchResults();
+  }, [user]);
 
   const expandedRowRender = (record) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 40 }}>

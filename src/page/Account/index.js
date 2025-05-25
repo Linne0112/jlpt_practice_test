@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Typography, Spin, Progress, Tag } from 'antd';
 import { collection, getDocs, query, where, getFirestore } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
-import { auth } from '../../firebase';
+import { firebaseApp } from '../../firebase';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -18,7 +18,7 @@ const AccountPage = () => {
 
       setLoading(true);
       try {
-        const db = getFirestore(auth);
+        const db = getFirestore(firebaseApp);
         const q = query(
           collection(db, 'sessions'),
           where('userId', '==', user.uid)

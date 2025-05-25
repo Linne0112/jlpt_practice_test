@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Typography, Spin, Progress, Tag } from 'antd';
 import { collection, getDocs, query, where, getFirestore } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
-import { firebaseApp } from '../firebase'; // chỉnh đúng đường dẫn
+import { useAuth } from '../../contexts/AuthContext';
+import { auth } from '../../firebase';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -18,7 +18,7 @@ const AccountPage = () => {
 
       setLoading(true);
       try {
-        const db = getFirestore(firebaseApp);
+        const db = getFirestore(auth);
         const q = query(
           collection(db, 'sessions'),
           where('userId', '==', user.uid)

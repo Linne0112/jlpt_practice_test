@@ -1,12 +1,8 @@
 // src/contexts/AuthContext.js
 import React, { createContext, useState, useContext } from 'react';
-
-
-// src/contexts/AuthContext.js
-import {createUserWithEmailAndPassword ,signInWithEmailAndPassword, getIdToken } from 'firebase/auth';
-import { auth } from '../firebase'; // đường dẫn tùy thuộc cấu trúc dự án
-import axios from 'axios';
-
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, getIdToken } from 'firebase/auth';
+import { auth } from '../firebase'; // chỉnh đường dẫn cho phù hợp
+import axios from '../axios';
 
 const AuthContext = createContext();
 
@@ -22,8 +18,8 @@ export const AuthProvider = ({ children }) => {
       // Lấy Firebase ID Token
       const firebaseToken = await getIdToken(firebaseUser);
 
-      // Gửi token lên backend để tạo tài khoản / trả về JWT nếu có backend
-      const res = await axios.post('http://localhost:8080/api/auth/register', {
+      // Gửi token lên backend để tạo tài khoản / lấy JWT
+      const res = await axios.post('/auth/register', {
         firebaseToken: firebaseToken
       });
 
@@ -35,6 +31,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error("Register error:", error);
+      alert("Đăng ký không thành công, vui lòng thử lại.");
       return false;
     }
   };
@@ -49,19 +46,29 @@ export const AuthProvider = ({ children }) => {
       const firebaseToken = await getIdToken(firebaseUser);
 
       // Gửi token lên backend để xác thực và lấy JWT
-      const res = await axios.post('http://localhost:8080/api/auth/login', {
+      const res = await axios.post('/auth/login', {
         firebaseToken: firebaseToken
       });
 
       const loginResponse = res.data;
       setUser(loginResponse.user); // {uid, email, role}
-      // Optional: lưu accessToken, refreshToken nếu cần
       localStorage.setItem("accessToken", loginResponse.accessToken);
       localStorage.setItem("refreshToken", loginResponse.refreshToken);
 
       return loginResponse.user;
     } catch (error) {
       console.error("Login error:", error);
+
+      // Kiểm tra lỗi mạng Firebase
+      if (
+        error.code === 'auth/network-request-failed' ||
+        (error.message && error.message.toLowerCase().includes('network'))
+      ) {
+        alert("Đường truyền yếu, vui lòng thử lại.");
+      } else {
+        alert("Đăng nhập không thành công, vui lòng đăng nhập lại.");
+      }
+
       return null;
     }
   };
@@ -73,7 +80,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register,logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

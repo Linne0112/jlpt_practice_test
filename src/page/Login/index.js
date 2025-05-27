@@ -38,7 +38,7 @@ const LoginPage = () => {
       height: '100vh',
       backgroundColor: '#f0f2f5' // Thêm màu nền cho đẹp hơn với Ant Design
     }}>
-      <Card title="Đăng nhập" style={{ width: 350, borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+      <Card title="ログイン" style={{ width: 350, borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
         <Form
           name="login"
           initialValues={{ remember: true }}
@@ -46,19 +46,19 @@ const LoginPage = () => {
           layout="vertical" // Để các trường form xếp dọc
         >
           <Form.Item
-            label="Email"
+            label="メールアドレス"
             name="username"
             rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập!' }]}
           >
-            <Input placeholder="Email" />
+            <Input placeholder="メールアドレス" />
           </Form.Item>
 
           <Form.Item
-            label="Mật khẩu"
+            label="パスワード"
             name="password"
             rules={[{ required: true, message: 'Vui lòng nhập mật khẩu!' }]}
           >
-            <Input.Password placeholder="Password" />
+            <Input.Password placeholder="パスワード" />
           </Form.Item>
 
           <Form.Item>
@@ -69,12 +69,12 @@ const LoginPage = () => {
               block
               style={{ borderRadius: '6px' }} // Thêm bo góc cho nút
             >
-              Đăng nhập
+              ログイン
             </Button>
           </Form.Item>
         </Form>
         <div style={{ textAlign: 'center', marginTop: '10px' }}>
-            Bạn chưa có tài khoản? <a href="/register">Đăng ký ngay!</a>
+            アカウントをお持ちでない方？ <a href="/register">今すぐ登録！</a>
         </div>
       </Card>
     </div>

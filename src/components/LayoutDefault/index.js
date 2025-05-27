@@ -11,21 +11,25 @@ const LayoutDefault = () => {
     <div className="layout-default">
       <header className="header">
         <h1 className="logo" onClick={() => navigate(user.role === 'admin' ? '/admin' : '/')}>
-          JLPT Practice
+          JLPT練習システム
         </h1>
 
         <div className="header-actions">
           <button className="home-button" onClick={() => navigate(user.role === 'admin' ? '/admin' : '/')}>
-            🏠 Trang chủ
+            {user.role === 'admin' ?"🏠 Trang chủ": "🏠 ホーム "}
           </button>
-
-          <button className="account-button" onClick={() => navigate('/account')}>
-            👤 Account
-          </button>
+          {
+            user.role !== 'admin' && (
+              <button className="account-button" onClick={() => navigate('/account')}>
+                👤  アカウント
+              </button>
+            )
+          }
+          
 
           {user.role === 'admin' && (
             <button className="admin-button" onClick={() => navigate('/admin')}>
-              🛠️ Quản trị
+              🛠️ Quản lý
             </button>
           )}
 
@@ -35,7 +39,7 @@ const LayoutDefault = () => {
               logout();
               navigate('/');
             }}>
-              🚪 Đăng xuất
+              {user.role === 'admin' ?"🏠 Đăng xuất": "🚪 ログアウト "}
             </button>
           )}
         </div>
@@ -46,7 +50,7 @@ const LayoutDefault = () => {
       </main>
 
       <footer className="footer">
-        <p>© 2025 JLPT Practice System</p>
+        <p>© 2025 JLPT練習システム</p>
       </footer>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, Typography, Radio, Space, Button, Spin, Modal } from 'antd';
-import axios from 'axios';
+import axios from '../../axios';
 import { useAuth } from '../../contexts/AuthContext';
 
 const { Title, Paragraph } = Typography;
@@ -21,12 +21,17 @@ const TestPage = () => {
   const userId = user ? user.uid : null;
   const accessToken = localStorage.getItem('accessToken');
 
-  
+  const sectionLabels = {
+    vocabulary: '語彙・漢字・文法',
+    reading: '読解',
+    listening: '聴解',
+  };
+
   /* Lấy đề thi */
   useEffect(() => {
     const fetchExam = async () => {
       try {
-        const response = await axios.get(`http://localhost:8080/api/exam/start`, {
+        const response = await axios.get(`/exam/start`, {
           params: {
             userId: userId,
             examId: id
@@ -57,7 +62,7 @@ const TestPage = () => {
 
 
     try {
-      await axios.post(`http://localhost:8080/api/exam/answer`, {
+      await axios.post(`/exam/answer`, {
         sessionId,
         examId: id,
         userId,
@@ -103,22 +108,53 @@ const TestPage = () => {
     ));
 
   /* Nộp bài */
-  const handleFinish = async() => {
+  const handleFinish = async () => {
     setEndModal(false);
+
+    // Tính tổng số câu hỏi
+    const totalQuestions = exam.reduce(
+      (total, section) => total + section.questionItems.length,
+      0
+    );
+
+    // Số câu đã trả lời
+    const answeredCount = Object.keys(answers).length;
+
+    if (answeredCount < totalQuestions) {
+      alert(`Bạn chưa trả lời hết tất cả các câu hỏi! Vui lòng hoàn thành trước khi nộp.`);
+      return;  // Dừng hàm, không gửi bài
+    }
+
+    setLoading(true);
+
     try {
-      await axios.post(`http://localhost:8080/api/exam/submit?sessionId=${sessionId}`, null, 
+      const response = await axios.post(
+        `/exam/submit?sessionId=${sessionId}`,
+        null,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`
           },
-          withCredentials: true
-      });
-      
+          withCredentials: true,
+          validateStatus: () => true  // Tự xử lý status code
+        }
+      );
+
+      if (response.status >= 200 && response.status < 300) {
+        navigate('/account');
+      } else {
+        console.error('Submit thất bại với status:', response.status, response.data);
+        alert('Gửi bài không thành công. Vui lòng thử lại sau.');
+      }
     } catch (error) {
-      console.error('Lỗi khi submit', error);
+      console.error('Lỗi khi gửi bài:', error);
+      alert('Lỗi kết nối. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
     }
-    navigate('/account');  // hoặc trang kết quả
   };
+
+
 
   if (loading) return <Spin size="large" style={{ margin: 48 }} />;
 
@@ -131,24 +167,24 @@ const TestPage = () => {
         onChange={setActive}
         items={exam.map(section => ({
           key: section.section,
-          label: section.section.toUpperCase(),
+          label: sectionLabels[section.section] || section.section,
           children: renderQuestions(section.section, section.questionItems),
         }))}
       />
 
       <Button type="primary" danger onClick={() => setEndModal(true)}>
-        Kết thúc bài thi
+        試験終了
       </Button>
 
       <Modal
         open={endModal}
-        title="Xác nhận kết thúc bài thi?"
-        okText="Nộp bài"
-        cancelText="Tiếp tục làm"
+        title="試験を終了してもよろしいですか？"
+        okText="提出する"
+        cancelText="続ける"
         onOk={handleFinish}
         onCancel={() => setEndModal(false)}
       >
-        <Paragraph>Sau khi nộp bạn sẽ không thể thay đổi đáp án. Bạn chắc chắn?</Paragraph>
+        <Paragraph>提出後は解答を変更できません。よろしいですか？</Paragraph>
       </Modal>
     </div>
   );

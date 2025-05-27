@@ -1,6 +1,6 @@
 import React from 'react';
 import { Form, Input, Select, Button, message } from 'antd';
-import axios from 'axios';
+import axios from '../../axios';
 
 const { Option } = Select;
 
@@ -18,7 +18,7 @@ const ExamForm = ({ level, onCreate, onCancel }) => {
     };
 
     try {
-      const response = await axios.post('http://localhost:8080/api/questions/new', payload,
+      const response = await axios.post('/questions/new', payload,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`

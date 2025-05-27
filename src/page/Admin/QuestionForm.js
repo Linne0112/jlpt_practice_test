@@ -4,7 +4,7 @@ import {
 } from 'antd';
 import { UploadOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../../axios';
 
 const { Title } = Typography;
 const { Option } = Select;
@@ -38,7 +38,7 @@ const QuestionForm = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:8080/api/questions?examId=${examId}&section=${sectionSelected}`,
+        `/questions?examId=${examId}&section=${sectionSelected}`,
         payload,
         {
           headers: {

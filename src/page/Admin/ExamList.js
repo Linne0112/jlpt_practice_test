@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Card, List, Modal, Typography, Spin, Tabs, message } from 'antd';
 import ExamForm from './ExamForm';
-import axios from 'axios';
+import axios from '../../axios';
 
 const { Title } = Typography;
 
@@ -18,7 +18,7 @@ const AdminExamList = () => {
     const fetchExams = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`http://localhost:8080/api/questions/level/${level.toUpperCase()}`, 
+        const response = await axios.get(`/questions/level/${level.toUpperCase()}`, 
         {headers: {
             Authorization: `Bearer ${accessToken}`
           }}

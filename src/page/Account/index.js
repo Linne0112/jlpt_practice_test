@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Typography, Spin, Progress, Tag } from 'antd';
+import { Table, Typography, Spin, Progress, Tag, Alert } from 'antd';
 import { collection, getDocs, query, where, getFirestore } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
 import { firebaseApp } from '../../firebase';
@@ -9,14 +9,21 @@ const { Title } = Typography;
 
 const AccountPage = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true); // Chỉ loading lần đầu
   const [results, setResults] = useState([]);
+  const [expandedRowKeys, setExpandedRowKeys] = useState([]);
+  const [error, setError] = useState(null);
+  const [waitingForScoring, setWaitingForScoring] = useState(false);
 
   useEffect(() => {
-    const fetchResults = async () => {
-      if (!user) return;
+    if (!user) return;
 
-      setLoading(true);
+    let intervalId;
+
+    const fetchResults = async () => {
+      // Lần đầu mới bật loading, lần sau thì không
+      if (initialLoading) setInitialLoading(true);
+      setError(null);
       try {
         const db = getFirestore(firebaseApp);
         const q = query(
@@ -25,38 +32,50 @@ const AccountPage = () => {
         );
         const snapshot = await getDocs(q);
 
-        const data = snapshot.docs.map(doc => {
-          const d = doc.data();
-          return {
-            examId: d.examId,
-            date: dayjs(Number(d.timestamp)).format('YYYY-MM-DD'),
-            level: 'N5', // bạn có thể thêm trường `level` vào session nếu có
-            totalScore: d.totalScore,
-            parts: {
-              vocab:     { score: d.vocabScore ?? 0, max: 60 },
-              listening: { score: d.listeningScore ?? 0, max: 60 },
-              reading:   { score: d.readingScore ?? 0, max: 60 },
-            },
-          };
-        });
-
-        setResults(data);
+        if (snapshot.empty) {
+          setResults([]);
+          setWaitingForScoring(true);
+        } else {
+          const data = snapshot.docs.map(doc => {
+            const d = doc.data();
+            return {
+              examId: doc.id,
+              date: dayjs(Number(d.timestamp)).format('YYYY-MM-DD'),
+              level: d.level ?? '不明',
+              totalScore: d.totalScore ?? 0,
+              parts: {
+                vocab:     { score: d.vocabScore ?? 0, max: 60 },
+                listening: { score: d.listeningScore ?? 0, max: 60 },
+                reading:   { score: d.readingScore ?? 0, max: 60 },
+              },
+            };
+          });
+          setResults(data);
+          setWaitingForScoring(false);
+        }
       } catch (err) {
         console.error("Error fetching sessions:", err);
+        setError('データの読み込みに失敗しました。再度お試しください。');
+        setWaitingForScoring(false);
       } finally {
-        setLoading(false);
+        // Chỉ tắt loading lần đầu thôi
+        if (initialLoading) setInitialLoading(false);
       }
     };
 
     fetchResults();
-  }, [user]);
+
+    intervalId = setInterval(fetchResults, 10000);
+
+    return () => clearInterval(intervalId);
+  }, [user, initialLoading]);
 
   const expandedRowRender = (record) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingLeft: 40 }}>
       {Object.entries(record.parts).map(([key, p]) => (
         <div key={key} style={{ width: 260 }}>
           <span style={{ marginRight: 8, display: 'inline-block', width: 120 }}>
-            {key === 'vocab' ? 'Từ vựng-Ngữ pháp' : key === 'listening' ? 'Nghe' : 'Đọc'}
+            {key === 'vocab' ? '語彙・漢字・文法' : key === 'listening' ? '聴解' : '読解'}
           </span>
           <Progress
             percent={Math.round((p.score / p.max) * 100)}
@@ -69,27 +88,60 @@ const AccountPage = () => {
   );
 
   const columns = [
-    { title: 'Ngày thi', dataIndex: 'date', key: 'date' },
+    { title: '試験日', dataIndex: 'date', key: 'date' },
     {
-      title: 'Cấp độ',
+      title: 'レベル',
       dataIndex: 'level',
       key: 'level',
       render: lv => <Tag color="blue">{lv}</Tag>,
     },
-    { title: 'Điểm tổng', dataIndex: 'totalScore', key: 'totalScore' },
+    { title: '合計点', dataIndex: 'totalScore', key: 'totalScore' },
   ];
+
+  const handleExpand = (expanded, record) => {
+    if (expanded) {
+      setExpandedRowKeys([record.examId]);
+    } else {
+      setExpandedRowKeys([]);
+    }
+  };
 
   return (
     <div style={{ padding: 24 }}>
-      <Title level={2}>Lịch sử bài thi</Title>
-      {loading ? (
-        <Spin />
+      <Title level={2}>試験履歴</Title>
+
+      {error && (
+        <Alert
+          message={error}
+          type="error"
+          showIcon
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
+      {waitingForScoring && !initialLoading && !error && (
+        <Alert
+          message="あなたの試験は現在採点中です。結果はまもなく表示されます。"
+          type="info"
+          showIcon
+          style={{ marginBottom: 20 }}
+        />
+      )}
+
+      {initialLoading ? (
+        <div style={{ textAlign: 'center', marginTop: 50 }}>
+          <Spin size="large" tip="データを読み込み中です…" />
+        </div>
       ) : (
         <Table
           rowKey="examId"
           columns={columns}
           dataSource={results}
-          expandable={{ expandedRowRender }}
+          expandable={{
+            expandedRowRender,
+            expandedRowKeys,
+            onExpand: handleExpand,
+          }}
           pagination={false}
         />
       )}

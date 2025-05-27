@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Typography, Button, List, Card, message, Tabs } from 'antd';
-import axios from 'axios';
+import axios from '../../axios';
 
 const { Title } = Typography;
 
@@ -21,7 +21,7 @@ const AdminExamDetail = () => {
       return;
     }
     try {
-      const url = `http://localhost:8080/api/questions/?examId=${examId}&section=${section}`;
+      const url = `/questions/?examId=${examId}&section=${section}`;
       const response = await axios.get(url, {headers: {
             Authorization: `Bearer ${accessToken}`
           }});

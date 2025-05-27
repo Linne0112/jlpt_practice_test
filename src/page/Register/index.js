@@ -40,7 +40,7 @@ const RegisterPage = () => {
       }}
     >
       <Card
-        title="Đăng ký"
+        title="新規登録"
         style={{ width: 350, borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
       >
         <Form
@@ -50,46 +50,46 @@ const RegisterPage = () => {
           layout="vertical"
         >
           <Form.Item
-            label="Email"
+            label="メールアドレス"
             name="email"
             rules={[
-              { required: true, message: 'Vui lòng nhập email!' },
-              { type: 'email', message: 'Email không hợp lệ!' },
+              { required: true, message: 'メールアドレスを入力してください！' },
+              { type: 'email', message: '無効なメールアドレスです！' },
             ]}
           >
-            <Input placeholder="Email" />
+            <Input placeholder="メールアドレス" />
           </Form.Item>
 
           <Form.Item
-            label="Mật khẩu"
+            label="パスワード"
             name="password"
             rules={[
-              { required: true, message: 'Vui lòng nhập mật khẩu!' },
-              { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự.' },
+              { required: true, message: ' パスワードを入力してください！' },
+              { min: 6, message: ' パスワードは6文字以上である必要があります' },
             ]}
             hasFeedback
           >
-            <Input.Password placeholder="Mật khẩu" />
+            <Input.Password placeholder="パスワード" />
           </Form.Item>
 
           <Form.Item
-            label="Nhập lại mật khẩu"
+            label="パスワード（確認）"
             name="confirmPassword"
             dependencies={['password']}
             hasFeedback
             rules={[
-              { required: true, message: 'Vui lòng nhập lại mật khẩu!' },
+              { required: true, message: 'パスワードが一致しません！' },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('Mật khẩu không khớp!'));
+                  return Promise.reject(new Error('パスワードが一致しません'));
                 },
               }),
             ]}
           >
-            <Input.Password placeholder="Nhập lại mật khẩu" />
+            <Input.Password placeholder="パスワード（確認）" />
           </Form.Item>
 
           <Form.Item>
@@ -100,12 +100,12 @@ const RegisterPage = () => {
               block
               style={{ borderRadius: '6px' }}
             >
-              Đăng ký
+              新規登録
             </Button>
           </Form.Item>
         </Form>
         <div style={{ textAlign: 'center', marginTop: '10px' }}>
-          Bạn đã có tài khoản? <a href="/login">Đăng nhập ngay!</a>
+          すでにアカウントをお持ちですか？ <a href="/login">ログイン！</a>
         </div>
       </Card>
     </div>

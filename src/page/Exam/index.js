@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Button, Modal, List, Typography, Spin, Tabs, message } from 'antd';
 import { PlayCircleOutlined } from '@ant-design/icons';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import axios from '../../axios';
 
 const { Title, Paragraph } = Typography;
 const LEVELS = ['N1', 'N2', 'N3', 'N4', 'N5'];
 
 const ExamPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const level = searchParams.get('level');
   const navigate = useNavigate();
   const [exams, setExams] = useState([]);
@@ -17,60 +17,54 @@ const ExamPage = () => {
   const [selectedExam, setSelectedExam] = useState(null);
   const accessToken = localStorage.getItem('accessToken');
 
-  /* Gọi API mỗi khi level đổi */
   useEffect(() => {
-  const fetchExams = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get('http://localhost:8080/api/exam', {
-        params: { level },
-        headers: {
-          Authorization: `Bearer ${accessToken}`
+    const fetchExams = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get('/exam', {
+          params: { level },
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+
+        const data = response.data;
+
+        if (!data || data.length === 0) {
+          message.warning(`Không tìm thấy đề thi nào cho trình độ ${level}`);
+          setExams([]);
+        } else {
+          setExams(data.map(exam => ({
+            id: exam.id,
+            title: ` ${exam.level} 模擬試験 - ${exam.year}/${exam.month}`,
+            examData: exam
+          })));
         }
-      });
 
-      const data = response.data;
-
-      if (!data || data.length === 0) {
-        message.warning(`Không tìm thấy đề thi nào cho trình độ ${level}`);
-        setExams([]);
-      } else {
-        setExams(data.map(exam => ({
-          id: exam.id,
-          title: `Đề ${exam.level} - ${exam.month}/${exam.year}`,
-          questions: 75, 
-          examData: exam
-        })));
+      } catch (error) {
+        console.error('Lỗi khi tải danh sách đề thi:', error);
+        message.error('Đã xảy ra lỗi khi tải đề thi');
+      } finally {
+        setLoading(false);
       }
-
-    } catch (error) {
-      console.error('Lỗi khi tải danh sách đề thi:', error);
-      message.error('Đã xảy ra lỗi khi tải đề thi');
-      
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
     fetchExams();
   }, [level]);
 
-  /* Đổi tab = đổi URL => level mới */
   const handleTabChange = (key) => {
     navigate(`/exam?level=${key}`);
   };
-  /*chuyển trang test */
-  const handleReady = async() => {
+
+  const handleReady = () => {
     setModalOpen(false);
-    
-    navigate(`/test/${selectedExam.id}`); 
+    navigate(`/test/${selectedExam.id}`);
   };
 
   return (
     <div style={{ padding: 24 }}>
-      <Title level={2}>Đề thi JLPT – Cấp độ {level.toUpperCase()}</Title>
+      <Title level={2}>JLPT試験問題 – {level.toUpperCase()} レベル</Title>
 
-      {/* Tabs chọn level */}
       <Tabs
         activeKey={level}
         onChange={handleTabChange}
@@ -92,14 +86,13 @@ const ExamPage = () => {
               <Card
                 id={exam.id}
                 title={exam.title}
-                extra={`${exam.questions} câu`}
                 actions={[
                   <Button
                     type="primary"
                     icon={<PlayCircleOutlined />}
                     onClick={() => { setSelectedExam(exam); setModalOpen(true); }}
                   >
-                    Làm bài
+                    試験を受ける
                   </Button>,
                 ]}
               />
@@ -110,15 +103,13 @@ const ExamPage = () => {
 
       <Modal
         open={modalOpen}
-        title="Bạn đã sẵn sàng làm bài?"
+        title="試験を受ける準備はできましたか？"
         onOk={handleReady}
-        okText="Sẵn sàng"
-        cancelText="Đóng"
+        okText="準備OK"
+        cancelText="閉じる"
         onCancel={() => setModalOpen(false)}
       >
         <Paragraph><strong>{selectedExam?.title}</strong></Paragraph>
-        <Paragraph>Số câu: {selectedExam?.questions}</Paragraph>
-        <Paragraph>Thời gian: 120 phút.</Paragraph>
       </Modal>
     </div>
   );

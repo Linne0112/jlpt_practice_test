@@ -17,7 +17,7 @@ const GoHomeButton = () => {
         borderRadius: '6px'
       }}
     >
-      Trang chủ
+      ホーム
     </Button>
   );
 };
